@@ -102,6 +102,7 @@ function Board({ quienSoy, onCambiarPersona }) {
       <div className="bg-blob bg-blob-a" />
       <div className="bg-blob bg-blob-b" />
       <div className="board-card">
+        <div className="bg-dots" />
         <header className="app-header">
           <div className="brand-badge">
             <span className="brand-badge-icon">📋</span>
