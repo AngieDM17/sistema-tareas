@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient.js'
 import PersonSelector from './components/PersonSelector.jsx'
 import Board from './components/Board.jsx'
+import Overview from './components/Overview.jsx'
 import './App.css'
 
 const QUIEN_SOY_KEY = 'quienSoy'
@@ -9,18 +10,24 @@ const QUIEN_SOY_KEY = 'quienSoy'
 function App() {
   const [personas, setPersonas] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [vista, setVista] = useState('personal')
   const [quienSoy, setQuienSoy] = useState(() => {
     const guardado = localStorage.getItem(QUIEN_SOY_KEY)
     return guardado ? JSON.parse(guardado) : null
   })
 
+  const cargarPersonas = async () => {
+    const { data, error } = await supabase.from('personas').select('*').order('nombre')
+    if (!error) setPersonas(data ?? [])
+    return error
+  }
+
   useEffect(() => {
-    const cargarPersonas = async () => {
-      const { data, error } = await supabase.from('personas').select('*').order('nombre')
-      if (!error) setPersonas(data ?? [])
+    const inicial = async () => {
+      await cargarPersonas()
       setCargando(false)
     }
-    cargarPersonas()
+    inicial()
   }, [])
 
   const seleccionarPersona = (persona) => {
@@ -31,6 +38,7 @@ function App() {
   const cambiarPersona = () => {
     localStorage.removeItem(QUIEN_SOY_KEY)
     setQuienSoy(null)
+    setVista('personal')
   }
 
   if (cargando) {
@@ -41,7 +49,23 @@ function App() {
     return <PersonSelector personas={personas} onSelect={seleccionarPersona} />
   }
 
-  return <Board quienSoy={quienSoy} onCambiarPersona={cambiarPersona} />
+  if (vista === 'general') {
+    return (
+      <Overview
+        personas={personas}
+        onPersonasChange={cargarPersonas}
+        onVolver={() => setVista('personal')}
+      />
+    )
+  }
+
+  return (
+    <Board
+      quienSoy={quienSoy}
+      onCambiarPersona={cambiarPersona}
+      onVerTodas={() => setVista('general')}
+    />
+  )
 }
 
 export default App

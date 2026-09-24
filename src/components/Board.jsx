@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient.js'
 import Lane from './Lane.jsx'
 
-function Board({ quienSoy, onCambiarPersona }) {
+function Board({ quienSoy, onCambiarPersona, onVerTodas }) {
   const [tareas, setTareas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [mostrarForm, setMostrarForm] = useState(false)
@@ -113,6 +113,9 @@ function Board({ quienSoy, onCambiarPersona }) {
             <span className="whoami-avatar" style={{ background: quienSoy.color }}>
               {quienSoy.nombre.charAt(0).toUpperCase()}
             </span>
+            <button type="button" className="link-button" onClick={onVerTodas}>
+              Ver todas las tareas
+            </button>
             <button type="button" className="link-button" onClick={onCambiarPersona}>
               Cambiar de persona
             </button>
