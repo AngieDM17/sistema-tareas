@@ -2,9 +2,30 @@ import { useState } from 'react'
 import TaskCard from './TaskCard.jsx'
 
 const COLUMNAS = [
-  { estado: 'por_hacer', titulo: 'Por hacer', icono: '○' },
-  { estado: 'en_progreso', titulo: 'En progreso', icono: '◐' },
-  { estado: 'hecho', titulo: 'Hecho', icono: '✓' },
+  {
+    estado: 'por_hacer',
+    titulo: 'Por hacer',
+    icono: '○',
+    emptyIcon: '📋',
+    emptyTitle: 'Aún no hay tareas',
+    emptyText: 'Crea tu primera tarea para empezar a organizar tu trabajo.',
+  },
+  {
+    estado: 'en_progreso',
+    titulo: 'En progreso',
+    icono: '◐',
+    emptyIcon: '🔄',
+    emptyTitle: 'Nada en progreso todavía',
+    emptyText: 'Las tareas que estés trabajando aparecerán aquí.',
+  },
+  {
+    estado: 'hecho',
+    titulo: 'Hecho',
+    icono: '✓',
+    emptyIcon: '🎉',
+    emptyTitle: '¡Todo en orden!',
+    emptyText: 'Aquí verás tus tareas completadas.',
+  },
 ]
 
 function AddTaskForm({ onCancel, onCreate }) {
@@ -51,13 +72,18 @@ function AddTaskForm({ onCancel, onCreate }) {
   )
 }
 
-function Lane({ persona, tareas, onMoverTarea, onCrearTarea, onToggleHecho, onEliminarTarea }) {
-  const [mostrarForm, setMostrarForm] = useState(false)
+function Lane({
+  persona,
+  tareas,
+  mostrarForm,
+  onAbrirForm,
+  onCerrarForm,
+  onMoverTarea,
+  onCrearTarea,
+  onToggleHecho,
+  onEliminarTarea,
+}) {
   const [columnaSobreVuelo, setColumnaSobreVuelo] = useState(null)
-
-  const total = tareas.length
-  const hechas = tareas.filter((t) => t.estado === 'hecho').length
-  const porcentaje = total === 0 ? 0 : Math.round((hechas / total) * 100)
 
   const handleDragStart = (event, tarea) => {
     event.dataTransfer.setData('text/plain', tarea.id)
@@ -79,41 +105,34 @@ function Lane({ persona, tareas, onMoverTarea, onCrearTarea, onToggleHecho, onEl
 
   const handleCrearTarea = async (titulo, descripcion) => {
     await onCrearTarea(persona.id, titulo, descripcion)
-    setMostrarForm(false)
+    onCerrarForm()
   }
 
   return (
     <div className="lane" style={{ '--lane-color': persona.color }}>
-      <div className="lane-header">
-        <div className="lane-header-title">
-          <span className="lane-avatar" style={{ background: persona.color }}>
-            {persona.nombre.charAt(0).toUpperCase()}
-          </span>
-          <h2>{persona.nombre}</h2>
-          <span className="lane-progress-text">
-            {hechas}/{total} tareas hechas
-          </span>
-        </div>
-        <div className="lane-progress-bar">
-          <div className="lane-progress-fill" style={{ width: `${porcentaje}%` }} />
-        </div>
-      </div>
       <div className="lane-columns">
-        {COLUMNAS.map((columna) => (
-          <div
-            key={columna.estado}
-            className={`column${columnaSobreVuelo === columna.estado ? ' drag-over' : ''}`}
-            onDragOver={(event) => handleDragOver(event, columna.estado)}
-            onDragLeave={() => setColumnaSobreVuelo(null)}
-            onDrop={(event) => handleDrop(event, columna.estado)}
-          >
-            <div className={`column-title column-title-${columna.estado}`}>
-              <span className="column-title-icon">{columna.icono}</span>
-              <span>{columna.titulo}</span>
-            </div>
-            {tareas
-              .filter((t) => t.estado === columna.estado)
-              .map((tarea) => (
+        {COLUMNAS.map((columna) => {
+          const tareasColumna = tareas.filter((t) => t.estado === columna.estado)
+          return (
+            <div
+              key={columna.estado}
+              className={`column${columnaSobreVuelo === columna.estado ? ' drag-over' : ''}`}
+              onDragOver={(event) => handleDragOver(event, columna.estado)}
+              onDragLeave={() => setColumnaSobreVuelo(null)}
+              onDrop={(event) => handleDrop(event, columna.estado)}
+            >
+              <div className={`column-title column-title-${columna.estado}`}>
+                <span className="column-title-icon">{columna.icono}</span>
+                <span>{columna.titulo}</span>
+              </div>
+              {tareasColumna.length === 0 && (
+                <div className="column-empty">
+                  <span className="column-empty-icon">{columna.emptyIcon}</span>
+                  <div className="column-empty-title">{columna.emptyTitle}</div>
+                  <p className="column-empty-text">{columna.emptyText}</p>
+                </div>
+              )}
+              {tareasColumna.map((tarea) => (
                 <TaskCard
                   key={tarea.id}
                   tarea={tarea}
@@ -122,26 +141,20 @@ function Lane({ persona, tareas, onMoverTarea, onCrearTarea, onToggleHecho, onEl
                   onDelete={onEliminarTarea}
                 />
               ))}
-            {columna.estado === 'por_hacer' && (
-              <div className="add-task">
-                {mostrarForm ? (
-                  <AddTaskForm
-                    onCancel={() => setMostrarForm(false)}
-                    onCreate={handleCrearTarea}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className="add-task-trigger"
-                    onClick={() => setMostrarForm(true)}
-                  >
-                    + Nueva tarea
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+              {columna.estado === 'por_hacer' && (
+                <div className="add-task">
+                  {mostrarForm ? (
+                    <AddTaskForm onCancel={onCerrarForm} onCreate={handleCrearTarea} />
+                  ) : (
+                    <button type="button" className="add-task-trigger" onClick={onAbrirForm}>
+                      + Nueva tarea
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
