@@ -23,14 +23,16 @@ function TaskCard({ tarea, onDragStart, onToggleHecho, onDelete }) {
             <div className="task-card-desc">{tarea.descripcion}</div>
           )}
         </div>
-        <button
-          type="button"
-          className="task-card-delete"
-          onClick={() => onDelete(tarea)}
-          title="Borrar tarea"
-        >
-          ×
-        </button>
+        {!esHecho && (
+          <button
+            type="button"
+            className="task-card-delete"
+            onClick={() => onDelete(tarea)}
+            title="Borrar tarea"
+          >
+            ×
+          </button>
+        )}
       </div>
     </div>
   )
